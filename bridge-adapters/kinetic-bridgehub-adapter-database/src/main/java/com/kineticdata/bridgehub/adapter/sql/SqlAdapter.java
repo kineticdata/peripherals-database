@@ -13,16 +13,16 @@ import com.kineticdata.commons.v1.config.ConfigurablePropertyMap;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringWriter;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Connection;
-import java.sql.Driver;
 import java.sql.DriverManager;
+import java.sql.NClob;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -219,10 +219,15 @@ public class SqlAdapter implements BridgeAdapter,DisposableAdapter {
     public Count count(BridgeRequest request) throws BridgeError {
         // Try to retrieve the count
         Integer count = null;
+
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
+        Connection connection = null;
+
         // Try to execute the query
         try {
             // Build a connection
-            Connection connection = DriverManager.getConnection(connectionString, username, password);
+            connection = DriverManager.getConnection(connectionString, username, password);
 
             // Build up the SQL WHERE clause
             SqlQualification qualification = SqlQualificationParser.parse(request.getQuery());
@@ -238,7 +243,7 @@ public class SqlAdapter implements BridgeAdapter,DisposableAdapter {
             // Prepare the statement
             logger.debug("Preparing Query");
             logger.debug("  "+statementString);
-            PreparedStatement statement = connection.prepareStatement(statementString.toString());
+            statement = connection.prepareStatement(statementString.toString());
             for (SqlQualificationParameter parameter : qualification.getParameters()) {
                 // Retrieve the parameter value
                 String parameterValue = request.getParameter(parameter.getName());
@@ -257,13 +262,16 @@ public class SqlAdapter implements BridgeAdapter,DisposableAdapter {
             }
 
             // Execute the Query
-            ResultSet resultSet = statement.executeQuery();
+            resultSet = statement.executeQuery();
             while(resultSet.next()){
                 count = new Integer(resultSet.getInt(1));
             }
-            connection.close(); 
         } catch (SQLException e) {
             throw new BridgeError("Unable to execute count request.", e);
+        } finally {
+            closeResource(resultSet);
+            closeResource(statement);
+            closeResource(connection);
         }
         
         return new Count(count);
@@ -271,13 +279,17 @@ public class SqlAdapter implements BridgeAdapter,DisposableAdapter {
 
     @Override
     public Record retrieve(BridgeRequest request) throws BridgeError {
-        // Initialize the record map
-        Map<String,Object> record = null;
+        // Initialize the record
+        Record record = null;
+
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
+        Connection connection = null;
 
         // Try to execute the query
         try {
             // Build a connection
-            Connection connection = DriverManager.getConnection(connectionString, username, password);
+            connection = DriverManager.getConnection(connectionString, username, password);
 
             // Build the list of columns to retrieve from the field string
             String columns = request.getFieldString();
@@ -309,7 +321,7 @@ public class SqlAdapter implements BridgeAdapter,DisposableAdapter {
             // Prepare the statement
             logger.debug("Preparing Query");
             logger.debug("  "+statementString);
-            PreparedStatement statement = connection.prepareStatement(statementString.toString());
+            statement = connection.prepareStatement(statementString.toString());
             for (SqlQualificationParameter parameter : qualification.getParameters()) {
                 // Retrieve the parameter value
                 String parameterValue = request.getParameter(parameter.getName());
@@ -328,32 +340,31 @@ public class SqlAdapter implements BridgeAdapter,DisposableAdapter {
             }
 
             // Execute the Query
-            ResultSet resultSet = statement.executeQuery();
+            resultSet = statement.executeQuery();
             // Retrieve the metadata
             ResultSetMetaData metadata = resultSet.getMetaData();
 
             // For each row
+            List<String> fields = request.getFields();
             while(resultSet.next()) {
                 // We only want one record, so if a second is return we will throw an Exception
                 if (record != null) {
                     connection.close(); 
                     throw new BridgeError("Multiple results matched an expected single match query of "+request.getStructure()+":"+request.getQuery());
                 } else {
-                    record = new LinkedHashMap();
-                }
-                // For each of the columns
-                for (int i=1;i<=metadata.getColumnCount();i++) {
-                    // Add the value to the record value array
-                    record.put(request.getFields().get(i-1), resultSet.getString(i));
+                    record = buildRecord(resultSet, metadata, fields);
                 }
             }
-        
-            connection.close(); 
         } catch (SQLException e) {
             throw new BridgeError("Unable to execute retrieve request.", e);
+        } finally {
+            closeResource(resultSet);
+            closeResource(statement);
+            closeResource(connection);
         }
-        
-        return new Record(record);
+
+        if (record == null) { record = new Record(); }
+        return record;
     }
 
     @Override
@@ -362,6 +373,10 @@ public class SqlAdapter implements BridgeAdapter,DisposableAdapter {
         List<Record> records = new ArrayList<Record>();
         // Initialize the metadata
         Map<String,String> metadata = new LinkedHashMap();
+
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
+        Connection connection = null;
 
         // Try to execute the query
         try {
@@ -379,7 +394,7 @@ public class SqlAdapter implements BridgeAdapter,DisposableAdapter {
             }
 
             // Build a connection
-            Connection connection = DriverManager.getConnection(connectionString, username, password);
+            connection = DriverManager.getConnection(connectionString, username, password);
             
             // Default the values
             if (pageNumber == null) {pageNumber = 1L;}
@@ -388,47 +403,20 @@ public class SqlAdapter implements BridgeAdapter,DisposableAdapter {
             logger.trace("Searching for "+pageSize+" records starting at "+offset+".");
 
             // Prepare the statement
-            PreparedStatement statement = buildPaginatedStatement(connection, request, offset, pageSize);
+            statement = buildPaginatedStatement(connection, request, offset, pageSize);
 
             // Execute the Query
-            ResultSet resultSet = statement.executeQuery();
+            resultSet = statement.executeQuery();
             // Retrieve the metadata
             ResultSetMetaData resultSetMetadata = resultSet.getMetaData();
+            // Retrieve the fields
+            List<String> fields = request.getFields();
 
             // For each row
-            List<String> fields = request.getFields();
             while(resultSet.next()) {
-                // Initialize an array of values
-                Map<String,Object> record = new LinkedHashMap();
-                // For each of the columns
-                for (int i=1;i<=resultSetMetadata.getColumnCount();i++) {
-                    String value = null;
-                    if (resultSetMetadata.getColumnType(i) == Types.BLOB) {
-                        Blob blob = resultSet.getBlob(i);
-                        if (blob != null) {
-                            byte[] bdata = blob.getBytes(1, (int)blob.length());
-                            value = new String(bdata);
-                        }
-                    } else if (resultSetMetadata.getColumnType(i) == Types.CLOB) {
-                        Clob clob = resultSet.getClob(i);
-                        if (clob != null) {
-                            InputStream in = clob.getAsciiStream();
-                            try {
-                                value = IOUtils.toString(in);
-                            } catch (IOException e) {
-                                throw new BridgeError("An error occurred while converting a Clob field to a String.",e);
-                            }
-                        }
-                    } else {
-                        value = resultSet.getString(i);
-                    }
-                    // Add the value to the record value array
-                    record.put(fields.get(i-1),value);
-                }
-                // Add the record value array to the list of records
-                records.add(new Record(record));
+                records.add(buildRecord(resultSet, resultSetMetadata, fields));
             }
-            
+
             int count = count(request).getValue();
             // Build the metadata
             metadata.put("pageSize", pageSize.toString());
@@ -436,12 +424,15 @@ public class SqlAdapter implements BridgeAdapter,DisposableAdapter {
             metadata.put("offset", offset.toString());
             metadata.put("count", String.valueOf(count));
             metadata.put("size", String.valueOf(records.size()));
-            
-            connection.close();
+
         } catch (SQLException e) {
             throw new BridgeError("Unable to execute search request.", e);
+        } finally {
+            closeResource(resultSet);
+            closeResource(statement);
+            closeResource(connection);
         }
-        
+
         return new RecordList(request.getFields(),records,metadata);
         
     }
@@ -514,19 +505,7 @@ public class SqlAdapter implements BridgeAdapter,DisposableAdapter {
     }
 
     @Override
-    public void destroy() {
-        if (this.connectionString != null) {
-            try {
-                Driver driver = DriverManager.getDriver(this.connectionString);
-                if (driver != null) {
-                    logger.info("Deregistering: "+this.adapterClass);
-                    DriverManager.deregisterDriver(driver);
-                }
-            } catch (Exception e) {
-                logger.error("There was a problem deregistering the "+this.adapterClass+" adapter.", e);
-            }   
-        }
-    }
+    public void destroy() {}
 
     private Long getNumericalMetadata(Object metadata) {
         Long result = null;
@@ -535,4 +514,70 @@ public class SqlAdapter implements BridgeAdapter,DisposableAdapter {
         }
         return result;
     }
+
+    protected void closeResource(Object resource) {
+        if (resource != null) {
+            try {
+                if (resource instanceof ResultSet) {
+                    ((ResultSet) resource).close();
+                }
+                else if (resource instanceof Statement) {
+                    ((Statement) resource).close();
+                }
+                else if (resource instanceof Connection) {
+                    ((Connection) resource).close();
+                }
+            } catch (SQLException e) {
+                logger.warn("Failed to close the {} resource", resource.getClass().getSimpleName(), e);
+            }
+        }
+    }
+
+    protected Record buildRecord(ResultSet resultSet, ResultSetMetaData resultSetMetadata, List<String> fields)
+        throws java.sql.SQLException, BridgeError
+    {
+        Map<String, Object> result = new LinkedHashMap<String, Object>();
+        for (int i=1; i<=resultSetMetadata.getColumnCount(); i++) {
+            String value = null;
+            String fieldName = (fields.size() >= i)
+                ? fields.get(i-1)
+                : resultSetMetadata.getColumnName(i);
+            if (resultSetMetadata.getColumnType(i) == Types.BLOB) {
+                Blob blob = resultSet.getBlob(i);
+                if (blob != null) {
+                    byte[] bdata = blob.getBytes(1, (int) blob.length());
+                    value = new String(bdata);
+                }
+            } else if (resultSetMetadata.getColumnType(i) == Types.CLOB) {
+                Clob clob = resultSet.getClob(i);
+                if (clob != null) {
+                    InputStream in = clob.getAsciiStream();
+                    try {
+                        value = IOUtils.toString(in);
+                    } catch (IOException e) {
+                        throw new BridgeError("An error occurred while converting a Clob field to a String.", e);
+                    } finally {
+                        IOUtils.closeQuietly(in);
+                    }
+                }
+            } else if (resultSetMetadata.getColumnType(i) == Types.NCLOB) {
+                NClob nClob = resultSet.getNClob(i);
+                if (nClob != null) {
+                    InputStream in = nClob.getAsciiStream();
+                    try {
+                        value = IOUtils.toString(in);
+                    } catch (IOException e) {
+                        throw new BridgeError("An error occurred while converting a NClob field to a String.", e);
+                    } finally {
+                        IOUtils.closeQuietly(in);
+                    }
+                }
+            } else {
+                value = resultSet.getString(i);
+            }
+            result.put(fieldName, value);
+        }
+        return new Record(result);
+    }
+
 }
