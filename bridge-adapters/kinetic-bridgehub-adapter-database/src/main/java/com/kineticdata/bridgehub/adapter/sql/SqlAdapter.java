@@ -17,6 +17,7 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.NClob;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -278,8 +279,8 @@ public class SqlAdapter implements BridgeAdapter,DisposableAdapter {
 
     @Override
     public Record retrieve(BridgeRequest request) throws BridgeError {
-        // Initialize the record map
-        Map<String,Object> record = null;
+        // Initialize the record
+        Record record = null;
 
         PreparedStatement statement = null;
         ResultSet resultSet = null;
@@ -351,12 +352,7 @@ public class SqlAdapter implements BridgeAdapter,DisposableAdapter {
                     connection.close(); 
                     throw new BridgeError("Multiple results matched an expected single match query of "+request.getStructure()+":"+request.getQuery());
                 } else {
-                    record = new LinkedHashMap();
-                }
-                // For each of the columns
-                for (int i=1;i<=metadata.getColumnCount();i++) {
-                    // Add the value to the record value array
-                    record.put(request.getFields().get(i-1), resultSet.getString(i));
+                    record = buildRecord(resultSet, metadata, fields);
                 }
             }
         } catch (SQLException e) {
@@ -366,8 +362,9 @@ public class SqlAdapter implements BridgeAdapter,DisposableAdapter {
             closeResource(statement);
             closeResource(connection);
         }
-        
-        return new Record(record);
+
+        if (record == null) { record = new Record(); }
+        return record;
     }
 
     @Override
@@ -412,41 +409,14 @@ public class SqlAdapter implements BridgeAdapter,DisposableAdapter {
             resultSet = statement.executeQuery();
             // Retrieve the metadata
             ResultSetMetaData resultSetMetadata = resultSet.getMetaData();
+            // Retrieve the fields
+            List<String> fields = request.getFields();
 
             // For each row
-            List<String> fields = request.getFields();
             while(resultSet.next()) {
-                // Initialize an array of values
-                Map<String,Object> record = new LinkedHashMap();
-                // For each of the columns
-                for (int i=1;i<=resultSetMetadata.getColumnCount();i++) {
-                    String value = null;
-                    if (resultSetMetadata.getColumnType(i) == Types.BLOB) {
-                        Blob blob = resultSet.getBlob(i);
-                        if (blob != null) {
-                            byte[] bdata = blob.getBytes(1, (int)blob.length());
-                            value = new String(bdata);
-                        }
-                    } else if (resultSetMetadata.getColumnType(i) == Types.CLOB) {
-                        Clob clob = resultSet.getClob(i);
-                        if (clob != null) {
-                            InputStream in = clob.getAsciiStream();
-                            try {
-                                value = IOUtils.toString(in);
-                            } catch (IOException e) {
-                                throw new BridgeError("An error occurred while converting a Clob field to a String.",e);
-                            }
-                        }
-                    } else {
-                        value = resultSet.getString(i);
-                    }
-                    // Add the value to the record value array
-                    record.put(fields.get(i-1),value);
-                }
-                // Add the record value array to the list of records
-                records.add(new Record(record));
+                records.add(buildRecord(resultSet, resultSetMetadata, fields));
             }
-            
+
             int count = count(request).getValue();
             // Build the metadata
             metadata.put("pageSize", pageSize.toString());
@@ -561,6 +531,53 @@ public class SqlAdapter implements BridgeAdapter,DisposableAdapter {
                 logger.warn("Failed to close the {} resource", resource.getClass().getSimpleName(), e);
             }
         }
+    }
+
+    protected Record buildRecord(ResultSet resultSet, ResultSetMetaData resultSetMetadata, List<String> fields)
+        throws java.sql.SQLException, BridgeError
+    {
+        Map<String, Object> result = new LinkedHashMap<String, Object>();
+        for (int i=1; i<=resultSetMetadata.getColumnCount(); i++) {
+            String value = null;
+            String fieldName = (fields.size() >= i)
+                ? fields.get(i-1)
+                : resultSetMetadata.getColumnName(i);
+            if (resultSetMetadata.getColumnType(i) == Types.BLOB) {
+                Blob blob = resultSet.getBlob(i);
+                if (blob != null) {
+                    byte[] bdata = blob.getBytes(1, (int) blob.length());
+                    value = new String(bdata);
+                }
+            } else if (resultSetMetadata.getColumnType(i) == Types.CLOB) {
+                Clob clob = resultSet.getClob(i);
+                if (clob != null) {
+                    InputStream in = clob.getAsciiStream();
+                    try {
+                        value = IOUtils.toString(in);
+                    } catch (IOException e) {
+                        throw new BridgeError("An error occurred while converting a Clob field to a String.", e);
+                    } finally {
+                        IOUtils.closeQuietly(in);
+                    }
+                }
+            } else if (resultSetMetadata.getColumnType(i) == Types.NCLOB) {
+                NClob nClob = resultSet.getNClob(i);
+                if (nClob != null) {
+                    InputStream in = nClob.getAsciiStream();
+                    try {
+                        value = IOUtils.toString(in);
+                    } catch (IOException e) {
+                        throw new BridgeError("An error occurred while converting a NClob field to a String.", e);
+                    } finally {
+                        IOUtils.closeQuietly(in);
+                    }
+                }
+            } else {
+                value = resultSet.getString(i);
+            }
+            result.put(fieldName, value);
+        }
+        return new Record(result);
     }
 
 }
