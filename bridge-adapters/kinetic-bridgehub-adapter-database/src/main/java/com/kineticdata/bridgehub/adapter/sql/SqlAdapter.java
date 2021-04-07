@@ -333,7 +333,7 @@ public class SqlAdapter implements BridgeAdapter,DisposableAdapter {
                 }
                 
                 // Log each parameter value in the query
-                logger.trace("  "+ Integer.toString(parameter.getIndex()+1) + " (" +parameter.getName()+") : "+parameterValue);
+                logger.trace("  "+ Integer.toString(parameter.getIndex()) + " (" +parameter.getName()+") : "+parameterValue);
                 
                 // Set the value for the parameter in the SQL statement.
                 statement.setObject(parameter.getIndex(), parameterValue);
