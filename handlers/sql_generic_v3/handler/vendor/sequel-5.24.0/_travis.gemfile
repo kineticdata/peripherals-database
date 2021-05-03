@@ -1,0 +1,56 @@
+# This file is only used for TravisCI integration.
+
+source 'http://rubygems.org'
+
+gem 'minitest', '>= 5.7.0'
+gem 'minitest-hooks'
+gem 'minitest-shared_description'
+
+# Plugin/Extension Dependencies
+gem 'tzinfo'
+
+if RUBY_VERSION < '2.1.0'
+  gem 'nokogiri', '<1.7.0'
+elsif RUBY_VERSION < '2.3.0'
+  gem 'nokogiri', '<1.10.0'
+else
+  gem 'nokogiri'
+end
+
+if RUBY_VERSION < '2.2.0'
+  gem 'activemodel', '<5.0.0'
+else
+  gem 'activemodel'
+end
+
+if RUBY_VERSION < '2.0.0'
+  gem 'json', '<1.8.5'
+  gem 'rake', '<10.0.0'
+else
+  gem 'json'
+  gem 'rake'
+end
+
+# MRI Adapter Dependencies
+platforms :ruby do
+  gem "sqlite3"
+  if RUBY_VERSION < '2.0.0'
+    gem "pg", '<0.19.0'
+    gem "mysql2", '<0.5'
+  else
+    gem "pg"
+    gem "mysql2"
+  end
+
+  # Test current sequel_pg on half of the MRIs, and pure-ruby on the other half
+  if RUBY_VERSION.split('.')[1].to_i.send(Time.now.yday.even? ? :even? : :odd?)
+    gem 'sequel_pg', github: 'jeremyevans/sequel_pg', require: 'sequel'
+  end
+end
+
+# JRuby Adapter Dependencies
+platforms :jruby do
+  gem 'jdbc-sqlite3'
+  gem 'jdbc-mysql'
+  gem 'jdbc-postgres'
+end

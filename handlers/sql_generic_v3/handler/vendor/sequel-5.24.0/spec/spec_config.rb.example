@@ -1,0 +1,3 @@
+# Custom setup for the adapter/integration specs
+# ENV['SEQUEL_INTEGRATION_URL'] = 'sqlite:/'
+# ENV['SEQUEL_POSTGRES_URL'] = 'postgres://localhost/test'

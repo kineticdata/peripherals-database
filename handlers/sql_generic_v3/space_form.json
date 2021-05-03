@@ -1,0 +1,148 @@
+{
+    "form": {
+      "attributes": [
+        {
+          "name": "Datastore Configuration",
+          "values": [
+            "{\"columns\":[{\"name\":\"Template Name\",\"label\":\"Template Name\",\"type\":\"value\",\"visible\":true},{\"name\":\"SQL Query\",\"label\":\"SQL Query\",\"type\":\"value\",\"visible\":true},{\"name\":\"handle\",\"label\":\"Handle\",\"type\":\"system\",\"visible\":true},{\"name\":\"label\",\"label\":\"Label\",\"type\":\"system\",\"visible\":false},{\"name\":\"createdAt\",\"label\":\"Created At\",\"type\":\"system\",\"visible\":false},{\"name\":\"createdBy\",\"label\":\"Created By\",\"type\":\"system\",\"visible\":false},{\"name\":\"updatedAt\",\"label\":\"Updated At\",\"type\":\"system\",\"visible\":false},{\"name\":\"updatedBy\",\"label\":\"Updated By\",\"type\":\"system\",\"visible\":false},{\"name\":\"id\",\"label\":\"Id\",\"type\":\"system\",\"visible\":false}],\"defaultSearchIndex\":null}"
+          ]
+        }
+      ],
+      "bridgedResources": [],
+      "customHeadContent": null,
+      "description": "This form is a repository of sql quires that is used with the sql generic v2 handler.",
+      "indexDefinitions": [
+        {
+          "name": "createdAt",
+          "parts": [
+            "createdAt"
+          ],
+          "unique": false
+        },
+        {
+          "name": "createdBy",
+          "parts": [
+            "createdBy"
+          ],
+          "unique": false
+        },
+        {
+          "name": "handle",
+          "parts": [
+            "handle"
+          ],
+          "unique": false
+        },
+        {
+          "name": "submittedAt",
+          "parts": [
+            "submittedAt"
+          ],
+          "unique": false
+        },
+        {
+          "name": "submittedBy",
+          "parts": [
+            "submittedBy"
+          ],
+          "unique": false
+        },
+        {
+          "name": "updatedAt",
+          "parts": [
+            "updatedAt"
+          ],
+          "unique": false
+        },
+        {
+          "name": "updatedBy",
+          "parts": [
+            "updatedBy"
+          ],
+          "unique": false
+        },
+        {
+          "name": "values[SQL Query]",
+          "parts": [
+            "values[SQL Query]"
+          ],
+          "unique": false
+        },
+        {
+          "name": "values[Template Name]:UNIQUE",
+          "parts": [
+            "values[Template Name]"
+          ],
+          "unique": true
+        }
+      ],
+      "name": "SQL Query Template",
+      "notes": null,
+      "pages": [
+        {
+          "advanceCondition": null,
+          "displayCondition": null,
+          "displayPage": null,
+          "elements": [
+            {
+              "type": "field",
+              "name": "Template Name",
+              "label": "Template Name",
+              "key": "f3",
+              "defaultValue": null,
+              "defaultResourceName": null,
+              "visible": true,
+              "enabled": true,
+              "required": false,
+              "requiredMessage": null,
+              "omitWhenHidden": null,
+              "pattern": null,
+              "constraints": [],
+              "events": [],
+              "renderAttributes": {},
+              "dataType": "string",
+              "renderType": "text",
+              "rows": 1
+            },
+            {
+              "type": "field",
+              "name": "SQL Query",
+              "label": "SQL Query",
+              "key": "f2",
+              "defaultValue": null,
+              "defaultResourceName": null,
+              "visible": true,
+              "enabled": true,
+              "required": false,
+              "requiredMessage": null,
+              "omitWhenHidden": null,
+              "pattern": null,
+              "constraints": [],
+              "events": [],
+              "renderAttributes": {},
+              "dataType": "string",
+              "renderType": "text",
+              "rows": 1
+            },
+            {
+              "type": "button",
+              "label": "Submit",
+              "name": "Submit Button",
+              "visible": true,
+              "enabled": true,
+              "renderType": "submit-page",
+              "renderAttributes": {}
+            }
+          ],
+          "events": [],
+          "name": "Page 1",
+          "renderType": "submittable",
+          "type": "page"
+        }
+      ],
+      "securityPolicies": [],
+      "slug": "sql-query-template",
+      "status": "Active",
+      "submissionLabelExpression": ""
+    }
+  }
