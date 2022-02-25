@@ -3,6 +3,7 @@ repo-name: peripherals-database
 categories:
 - Database
 - Storage
-display-name: 
-manufacture: 
+display-name: Generic Database Plugins
+manufacturer: 
 product: 
+description: JDBC is the most common way to connect to a database. This integration contains common ways to integrate from Kinetic to various Databases using JDBC.
