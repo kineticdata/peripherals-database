@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This file contains a list of all configurable values used by the task node.
+
+The name of the parameter is defined by applying the 'name' attribute to the
+info tag.  For example, to define a parameter named 'username' add the
+following line:
+<info name="username" description="The username used to login"></info>
+
+Default values may be defined by placing the value of the parameter
+within the info tags.  For example, to define a parameter named 'username'
+with a default value of 'KD_WEBUSER' add the following line:
+<info name="username">KD_WEBUSER</info>
+
+When dealing with input parameters that should be encrypted (passwords, api
+secret keys, etc), add the type="encypted" attribute to the info:
+<info name="password" type="encrypted"></info>
+-->
+<taskInfo version="1.0">
+  <info name="database_server" description="JDBC connection that specifies the database location."></info>
+  <info name="database_port" description=""></info>
+  <info name="integrated_security" description="Integrated Security will leverage Windows Authentication and ignore any username entered" type="dropdown"></info>
+  <info name="trust_server_cert" description="Trust Server Certificate flag" type=""></info>
+  <info name="database_username" description="The username of the user that this handler will use to connect to the database." type=""></info>
+  <info name="database_password" description="The password of the user that this handler will use to connect to the database." type="encrypted"></info>
+  <info name="kinetic_api_location" description="API Location (https://acme.kinops.io/app/api/v1)." type=""></info>
+  <info name="kinetic_api_username" description="The username for impersonated user." type=""></info>
+  <info name="kinetic_api_password" description="The impersonated user's password." type="encrypted"></info>
+  <info name="kapp_slug" description="The kapp slug where the form that holds the query templates is located."></info>
+  <info name="kapp_form_slug" description="The form slug for the form where query templates are saved."></info> 
+  <info name="enable_debug_logging" description="Enable debug logging if the value is set to 'Yes'.">No</info>
+</taskInfo>

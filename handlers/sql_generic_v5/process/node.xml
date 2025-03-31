@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<taskDefinition id="sql_generic" name="SQL Generic Command" schema_version="1.0" version="5">
+    <author>support@kineticdata.com</author>
+    <description>
+        Execute a SQL Generic Command.
+    </description>
+    <helpurl></helpurl>
+    <visible>false</visible>
+    <deferrable>false</deferrable>
+    <parameters>
+        <parameter id="error_handling" label="Error Handling" required="true" tooltip="Determine what to return if an error is encountered." menu="Error Message,Raise Error">Error Message</parameter>
+		    <parameter id="jdbc_database" label="Database" required="true" tooltip="Database to Access for example sqlserver, oracle or postgresql.">sqlserver</parameter>
+		    <parameter id="dbname" label="Database Name" required="true" tooltip="Database Name"></parameter>
+		    <parameter id="action" label="SQL Action" required="true" tooltip="SQL Action Type. Use fetch for a SELECT statement or run for an UPDATE query.">fetch</parameter>
+        <parameter id="template_name" label="Template Name" required="true" tooltip="A query to search the Kinetic Form to find the saved procedure."></parameter>
+        <parameter id="query_values" label="Query Values" required="true" tooltip="A JSON object used to do variable binding with the saved procedure."></parameter>
+    </parameters>
+    <handler name="sql_generic" version="4">
+        <infos>
+            <info name='database_server'>&lt;%=@info['database_server']%&gt;</info>
+            <info name='database_port'>&lt;%=@info['database_port']%&gt;</info>
+            <info name='integrated_security'>&lt;%=@info['integrated_security']%&gt;</info>
+            <info name="integrated_security" >NO</parameter>
+            <info name='database_username'>&lt;%=@info['database_username']%&gt;</info>
+            <info name='database_password'>&lt;%=@info['database_password']%&gt;</info>
+            <info name="kinetic_api_location">&lt;%=@info['kinetic_api_location']%&gt;</info>
+            <info name="kinetic_api_username">&lt;%=@info['kinetic_api_username']%&gt;</info>
+            <info name='kinetic_api_password'>&lt;%=@info['kinetic_api_password']%&gt;</info>
+            <info name="kapp_slug">&lt;%=@info['kapp_slug']%&gt;</info>
+            <info name="kapp_form_slug">&lt;%=@info['kapp_form_slug']%&gt;</info>
+            <info name='enable_debug_logging'>&lt;%= @info['enable_debug_logging'] %&gt;</info>
+        </infos>
+        <parameters>
+		        <parameter name="action">&lt;%= @parameters["action"] %&gt;</parameter>
+            <parameter name="error_handling">&lt;%= @parameters["error_handling"] %&gt;</parameter>
+		        <parameter name="jdbc_database">&lt;%= @parameters["jdbc_database"] %&gt;</parameter>
+            <parameter name="dbname">&lt;%= @parameters["dbname"] %&gt;</parameter>
+            <parameter name="template_name">&lt;%= @parameters["template_name"] %&gt;</parameter>
+            <parameter name="query_values">&lt;%= @parameters["query_values"] %&gt;</parameter>
+        </parameters>
+    </handler>
+    <results>
+        <result name="Result"></result>
+		    <result name="Handler Error Message"></result>
+    </results>
+</taskDefinition>
