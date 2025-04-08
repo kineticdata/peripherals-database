@@ -20,7 +20,7 @@
             <info name='database_server'>&lt;%=@info['database_server']%&gt;</info>
             <info name='database_port'>&lt;%=@info['database_port']%&gt;</info>
             <info name='integrated_security'>&lt;%=@info['integrated_security']%&gt;</info>
-            <info name="integrated_security" >NO</parameter>
+            <info name="integrated_security" >false</info>
             <info name='database_username'>&lt;%=@info['database_username']%&gt;</info>
             <info name='database_password'>&lt;%=@info['database_password']%&gt;</info>
             <info name="kinetic_api_location">&lt;%=@info['kinetic_api_location']%&gt;</info>
@@ -41,6 +41,6 @@
     </handler>
     <results>
         <result name="Result"></result>
-		    <result name="Handler Error Message"></result>
+        <result name="Handler Error Message"></result>
     </results>
 </taskDefinition>
