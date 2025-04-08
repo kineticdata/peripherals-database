@@ -15,7 +15,7 @@
         <parameter id="template_name" label="Template Name" required="true" tooltip="A query to search the Kinetic Form to find the saved procedure."></parameter>
         <parameter id="query_values" label="Query Values" required="true" tooltip="A JSON object used to do variable binding with the saved procedure."></parameter>
     </parameters>
-    <handler name="sql_generic" version="4">
+    <handler name="sql_generic" version="5">
         <infos>
             <info name='database_server'>&lt;%=@info['database_server']%&gt;</info>
             <info name='database_port'>&lt;%=@info['database_port']%&gt;</info>
