@@ -17,9 +17,21 @@ This handler works with Platform v5.2+
 [integrated_security]
 
 	true/false - Enables integrated security on connection - NOTE sqljdbc_auth.dll required and username is ignored
-[trust_server_cert]
+[trust_server_cert_ssl_require]
 
+	SQL Connection
 	true/false - Encrypt but bypass walking the certificate chain to validate trust.
+	-----
+	ORACLE Connection
+
+	-----
+	POSTGRESQL Connection
+	disable
+	allow
+	prefer
+	require
+	verify-ca
+	verify-full
 [database_username]
 
 	The username used to connect to the database

@@ -74,7 +74,7 @@ class SqlGenericV5
   db_port = @info_values["database_port"]
   db_name = @parameters["dbname"]
   integrated_security = @info_values["integrated_security"].downcase.strip! == "true"
-  trust_server_cert = @info_values['trust_server_cert'].downcase.strip! == "true"
+  trust_server_cert_ssl_require = @info_values['trust_server_cert_ssl_require'].downcase.strip!
   db_username = @info_values['database_username']
   db_password = @info_values["database_password"]
   error_message = nil
@@ -110,7 +110,7 @@ class SqlGenericV5
       puts "Port #{db_port} at server '#{db_server}' is open." if @enable_debug_logging
       begin
         if @parameters["jdbc_database"].downcase == "sqlserver"
-            @db = Sequel.connect("jdbc:#{@parameters["jdbc_database"]}://#{db_server}:#{db_port};database=#{db_name};;user=#{db_username};password=#{db_password};integratedSecurity=#{integrated_security};trustServerCertificate=#{trustServerCertificate};")
+            @db = Sequel.connect("jdbc:#{@parameters["jdbc_database"]}://#{db_server}:#{db_port};database=#{db_name};;user=#{db_username};password=#{db_password};integratedSecurity=#{integrated_security};trustServerCertificate=#{trust_server_cert_ssl_require};")
             @db.extension :identifier_mangling
             @db.identifier_input_method = nil
             @db.identifier_output_method = nil
@@ -119,13 +119,14 @@ class SqlGenericV5
           Sequel.database_timezone = :utc
             #Sequel.application_timezone = :utc
             @db = Sequel.connect("jdbc:#{@parameters["jdbc_database"]}:thin:#{db_username}/#{db_password}@#{db_server}:#{db_port}:#{db_name}")
+            #TODO - Rewrite for trustcert
             @db.extension :identifier_mangling
             @db.identifier_input_method = nil
             @db.identifier_output_method = nil
             @max_db_identifier_size = 30
         elsif @parameters["jdbc_database"].downcase == "postgresql"
             @max_db_identifier_size = 64
-            @db = Sequel.connect("jdbc:#{@parameters["jdbc_database"]}://#{db_server}:#{db_port}/#{db_name}?user=#{db_username}&password=#{db_password}")
+            @db = Sequel.connect("jdbc:#{@parameters["jdbc_database"]}://#{db_server}:#{db_port}/#{db_name}?user=#{db_username}&password=#{db_password}&sslmode=#{trust_server_cert_ssl_require}")
         elsif @parameters["jdbc_database"].downcase == "mysql"
           # TODO: what goes here
         end

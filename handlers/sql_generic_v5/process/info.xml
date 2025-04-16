@@ -20,7 +20,7 @@ secret keys, etc), add the type="encypted" attribute to the info:
   <info name="database_server" description="JDBC connection that specifies the database location."></info>
   <info name="database_port" description=""></info>
   <info name="integrated_security" description="Integrated Security will leverage Windows Authentication and ignore any username entered" type="dropdown"></info>
-  <info name="trust_server_cert" description="Trust Server Certificate flag" type=""></info>
+  <info name="trust_server_cert_ssl_require" description="Trust Server Certificate flag" type=""></info>
   <info name="database_username" description="The username of the user that this handler will use to connect to the database." type=""></info>
   <info name="database_password" description="The password of the user that this handler will use to connect to the database." type="encrypted"></info>
   <info name="kinetic_api_location" description="API Location (https://acme.kinops.io/app/api/v1)." type=""></info>
