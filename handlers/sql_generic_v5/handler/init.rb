@@ -74,9 +74,10 @@ class SqlGenericV5
   db_port = @info_values["database_port"]
   db_name = @parameters["dbname"]
   integrated_security = @info_values["integrated_security"].downcase.strip! == "true"
-  trust_server_cert_ssl_require = @info_values['trust_server_cert_ssl_require'].downcase.strip!
+  trust_server_cert_ssl_require = @info_values['trust_server_cert_ssl_require'].downcase.strip! == "true"
   db_username = @info_values['database_username']
   db_password = @info_values["database_password"]
+  encrypt = @info_values["encrypt"]
   error_message = nil
 
 
@@ -110,7 +111,24 @@ class SqlGenericV5
       puts "Port #{db_port} at server '#{db_server}' is open." if @enable_debug_logging
       begin
         if @parameters["jdbc_database"].downcase == "sqlserver"
-            @db = Sequel.connect("jdbc:#{@parameters["jdbc_database"]}://#{db_server}:#{db_port};database=#{db_name};;user=#{db_username};password=#{db_password};integratedSecurity=#{integrated_security};trustServerCertificate=#{trust_server_cert_ssl_require};")
+            sql_connection = "jdbc:#{@parameters["jdbc_database"]}://#{db_server}:#{db_port}"
+            if !db_name.nil?
+              sql_connection += ";database=#{db_name}"
+            end
+            if !db_username.nil? && !db_password.nil?
+              sql_connection += ";user=#{db_username};password=#{db_password}"
+            end
+            if !integrated_security.nil?
+              sql_connection += ";integratedSecurity=#{integrated_security}"
+            end
+            if !trust_server_cert_ssl_require.nil?
+              sql_connection += ";trustServerCertificate=#{trust_server_cert_ssl_require}"
+            end
+            if encrypt.nil?
+              sql_connection += ";encrypt=#{encrypt}"
+            end
+            sql_connection += ";"
+            @db = Sequel.connect(sql_connection)
             @db.extension :identifier_mangling
             @db.identifier_input_method = nil
             @db.identifier_output_method = nil

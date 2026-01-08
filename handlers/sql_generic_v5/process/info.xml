@@ -19,7 +19,8 @@ secret keys, etc), add the type="encypted" attribute to the info:
 <taskInfo version="1.0">
   <info name="database_server" description="JDBC connection that specifies the database location."></info>
   <info name="database_port" description=""></info>
-  <info name="integrated_security" description="Integrated Security will leverage Windows Authentication and ignore any username entered" type="dropdown"></info>
+  <info name="encrypt" description="Encrypt connection" type=""></info>
+  <info name="integrated_security" description="Integrated Security will leverage Windows Authentication and ignore any username entered" type=""></info>
   <info name="trust_server_cert_ssl_require" description="Trust Server Certificate flag" type=""></info>
   <info name="database_username" description="The username of the user that this handler will use to connect to the database." type=""></info>
   <info name="database_password" description="The password of the user that this handler will use to connect to the database." type="encrypted"></info>
